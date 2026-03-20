@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Label Quick-Print</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0a0a0a;color:#f0f0f0;font-family:'DM Mono','Courier New',monospace;min-height:100vh}
+button{font-family:'DM Mono','Courier New',monospace}
+input{font-family:'DM Mono','Courier New',monospace}
+input[type=range]{width:100%;accent-color:#FFD200;cursor:pointer;height:6px}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+::-webkit-scrollbar{display:none}
+
+.screen{max-width:480px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh}
+.hdr{background:#0d0d0d;border-bottom:2px solid #FFD200;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20}
+.htitle{flex:1;font-size:17px;font-weight:700;letter-spacing:1.5px;color:#FFD200}
+.body{flex:1;padding:14px 14px 90px;display:flex;flex-direction:column;gap:11px}
+
+.card{background:#141414;border:1px solid #222;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.lbl{font-size:11px;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:1.2px}
+.inp{background:#0d0d0d;border:1.5px solid #222;border-radius:9px;color:#f0f0f0;font-size:16px;padding:13px 14px;width:100%;outline:none}
+
+.btn-y{background:#FFD200;color:#000;border:none;border-radius:10px;padding:15px 20px;font-size:16px;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-d{background:#1a1a1a;color:#f0f0f0;border:1px solid #222;border-radius:10px;padding:15px 20px;font-size:16px;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-sm{background:#1e1e1e;color:#f0f0f0;border:1px solid #222;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-icon{background:none;border:none;cursor:pointer;padding:4px;color:#666;display:flex;align-items:center}
+
+.toast-ok{background:#0d2818;border:1px solid #4ade80;color:#4ade80;border-radius:10px;padding:11px 14px;font-size:14px}
+.toast-err{background:#2a0a0a;border:1px solid #f87171;color:#f87171;border-radius:10px;padding:11px 14px;font-size:14px}
+
+.sugg-wrap{position:relative}
+.sugg{background:#181818;border:1px solid #FFD20044;border-radius:9px;overflow:hidden;position:absolute;width:100%;z-index:15;top:100%;box-shadow:0 8px 24px #000000bb;max-height:280px;overflow-y:auto}
+.srow{padding:12px 15px;font-size:15px;cursor:pointer;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px}
+.srow:last-child{border-bottom:none}
+.srow:active{background:#222}
+
+.qgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.qbtn{background:#1a1a1a;color:#f0f0f0;border:1px solid #222;border-radius:9px;padding:12px 0;font-size:18px;font-weight:700;cursor:pointer;text-align:center;width:100%;transition:background .1s,color .1s}
+.qbtn.active{background:#FFD200;color:#000;border:none}
+.qbtn:disabled{opacity:.3;cursor:not-allowed}
+
+
+
+/* ANDROID FILE PICKER FIX — label wraps the hidden input, acts as the button */
+.file-label{display:flex;align-items:center;justify-content:center;gap:10px;background:#FFD200;color:#000;border:none;border-radius:12px;padding:20px;font-size:17px;font-weight:700;cursor:pointer;width:100%;text-align:center;letter-spacing:.4px}
+#csv-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.info-box{background:#111;border:1px solid #222;border-radius:10px;padding:14px;font-size:13px;color:#777;line-height:1.8}
+.info-title{font-size:12px;color:#FFD200;font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.info-step{padding:4px 0;border-bottom:1px solid #222}
+.info-step:last-child{border-bottom:none}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.divider{display:flex;align-items:center;gap:10px}
+.divider-line{flex:1;height:1px;background:#222}
+.section{background:#141414;border-radius:10px;padding:16px;border:1px solid #222}
+.sec-title{font-size:13px;font-weight:700;color:#FFD200;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.search-wrap{background:#0d0d0d;border:1.5px solid #222;border-radius:9px;display:flex;align-items:center;gap:10px;padding:0 14px}
+.search-inp{background:transparent;border:none;color:#f0f0f0;font-size:16px;outline:none;flex:1;padding:13px 0}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.preview-box{background:#0d0d0d;border-radius:8px;padding:12px;border:1px solid #222;margin-top:8px}
+.rng-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.rng-ends{display:flex;justify-content:space-between;font-size:11px;color:#444;margin-top:2px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+.overlay{position:fixed;inset:0;background:#000000cc;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
+.prog-bar{width:220px;height:6px;background:#222;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:#FFD200;border-radius:99px;transition:width .3s}
+
+.preview-list{background:#141414;border:1px solid #222;border-radius:10px;overflow:hidden;max-height:300px;overflow-y:auto}
+.preview-row{padding:10px 14px;border-bottom:1px solid #222;font-size:14px}
+.preview-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+
+<!-- Hidden CSV file input — OUTSIDE all click handlers for Android compatibility -->
+<input type="file" id="csv-input" accept="*/*"/>
+
+<div id="root"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────────────────────────────
+const DEF_SETTINGS = {printerUid:'',labelW:799,labelH:559,fontName:72,fontCases:90,fontMeta:28,showAddress:true,labelPreset:'100x70',bpHost:'localhost'};
+const BUILTIN_CUSTOMERS = [{"id": 1, "name": "24/7 Gumly Gumly", "address": "1 Tasman Road, Gumly Gumly, NSW, 2652"}, {"id": 2, "name": "AAPA - AUSTRALIAN AIRLINE PILOT ACADEMY", "address": "Australian Airline Pilot Academy, FOREST HILL, NSW, 2651"}, {"id": 3, "name": "AGRIFUTURES CSU", "address": "CSU AGRIFUTURES, WAGGA WAGGA, NSW, 2650"}, {"id": 4, "name": "ALISTAIR MILLS", "address": ""}, {"id": 5, "name": "AMPOL FERNLEIGH ROAD", "address": ""}, {"id": 6, "name": "Anatolia Kebab", "address": "97 Fitzmaurice Stree, Wagga Wagga, NSW, 2650"}, {"id": 7, "name": "ANATOLIA KEBABS", "address": "SAAI FOODS PTY LTD"}, {"id": 8, "name": "ANYTIME FITNESS", "address": ""}, {"id": 9, "name": "Apple Thief Cider House", "address": "4066 Batlow Road, Batlow, NSW, 2730"}, {"id": 10, "name": "ARTISAN BAKER", "address": "1 McCoullough drive, Tolland, Nsw, 2650"}, {"id": 11, "name": "ASHMONT BREAKFAST CLUB", "address": ""}, {"id": 12, "name": "ASHMONT HOTEL", "address": "55 Tobruk St, ASHMONT, NSW, 2650"}, {"id": 13, "name": "Asia delight Wagga", "address": "39A/87 Baylis street Wagga Wagga NSW, Wagga Wagga, NSW, 2650"}, {"id": 14, "name": "ASTOR", "address": ""}, {"id": 15, "name": "B & L Harpley Pty Ltd T/As Carlo's Wagga", "address": "1/195 Morgan Street, Wagga Wagga, NSW, 2650"}, {"id": 16, "name": "BAE SYSTEMS", "address": ""}, {"id": 17, "name": "BANH MI 88", "address": "14 yenda ave gobbagombalin, Gobbagombalin, Nsw, 2650"}, {"id": 18, "name": "BAPTIST CARE CALOOLA", "address": ""}, {"id": 19, "name": "Bar Olivette", "address": "189 Gurwood St, WAGGA WAGGA, NSW, 2650"}, {"id": 20, "name": "BATLOW RSL", "address": ""}, {"id": 21, "name": "BEL AIR", "address": "BEL AIR PIZZA & PASTA"}, {"id": 22, "name": "BIRDHOUSE", "address": ""}, {"id": 23, "name": "Blake St Country Fresh Meats", "address": "Country Fresh Meats, KOORINGAL, NSW, 2650"}, {"id": 24, "name": "BLESSED BEAN AIRPORT", "address": ""}, {"id": 25, "name": "BLESSED BEAN BEST STREET (Larry's Cafe)", "address": "BLESSED BEAN BEST STREET, WAGGA WAGGA, NSW, 2650"}, {"id": 26, "name": "BOLTON ON THE PARK", "address": "59-63 Tarcutta Street, Wagga Wagga, NSW, 2650"}, {"id": 27, "name": "BOOST JUICE", "address": "BOOST JUICE"}, {"id": 28, "name": "Borambola Sport & Recreation Centre", "address": "Borambola Sport & Rec"}, {"id": 29, "name": "Bowser Bean", "address": "578 City Road, South Melbourne, VIC, 3205"}, {"id": 30, "name": "Brew at 102", "address": "14 Walster Street, Junee, NSW, 2663"}, {"id": 31, "name": "Bright Beginnings Early Years Learning Centre", "address": "99 Coleman Street, TURVEY PARK, NSW, 2650"}, {"id": 32, "name": "BROADWAY CAFE CASH", "address": "BROADWAY CAFE"}, {"id": 33, "name": "BUSY BEAN CAFE", "address": "BUSY BEAN CAFE"}, {"id": 34, "name": "BYRNE TRAILERS", "address": ""}, {"id": 35, "name": "Cafe Moorish", "address": "Unit 1/41 Moorong st Moorong, Moorong, N.S.W, 2650"}, {"id": 36, "name": "CALVARY CARE", "address": ""}, {"id": 37, "name": "Casa Mia Cafe", "address": "Shop 2A Homebase, 7-23 Hammond Avenue, East Wagga Wagga, NSW, 2650"}, {"id": 38, "name": "CASH - DELIVERY", "address": ""}, {"id": 39, "name": "CASH - PICK UP", "address": "CASH SALE"}, {"id": 40, "name": "Castle lane catering", "address": "CASTLE LANE CATERING"}, {"id": 41, "name": "CATER HOUSE", "address": "Murrumbidgee Turf Club, Travers Street, WAGGA WAGGA, New South Wales, 2650"}, {"id": 42, "name": "CATHOLIC HEALTHCARE LTD (The Haven-FC2532)", "address": "Suite 1, Level 5, 15 Talavera Road\r\nMacquarie Park NSW 2113, Australia, NSW, 2113"}, {"id": 43, "name": "CBA BUSINESS BANKING", "address": ""}, {"id": 44, "name": "CHANS RESTURANT LEETON", "address": ""}, {"id": 45, "name": "Charles Sturt University", "address": "Food and Beverage"}, {"id": 46, "name": "China Panda", "address": ""}, {"id": 47, "name": "Christian Collage", "address": ""}, {"id": 48, "name": "COFFEE CLUB M/P", "address": "Coffee Club Market Place"}, {"id": 49, "name": "COFFEE GURU", "address": "Marketplace  Shop 60  87 Baylis St, WAGGA WAGGA, NSW, 2650"}, {"id": 50, "name": "COMMERCIAL HOTEL JUNEE", "address": ""}, {"id": 51, "name": "CONSOLIDATED FOODS", "address": "lawrence.adams@cfbrands.com.au"}, {"id": 52, "name": "Cooinda Court Aged Care", "address": "24-28 Commins St, Junee, NSW, 2663"}, {"id": 53, "name": "Coolabah tree cafe", "address": "Unit 1 , 1 tasman road, Gumly gumly, Wagga wagga, 2652"}, {"id": 54, "name": "Coolamon Cheese", "address": ""}, {"id": 55, "name": "Coolamon Hotel", "address": "67 - 69 Cowabbie Street, Coolamon, NSW, 2701"}, {"id": 56, "name": "Coolamon Perk", "address": "115 cowabbie street, Coolamon, nsw, 2701"}, {"id": 57, "name": "Coolamon Perk Cafe", "address": "115 Cowabbie Street, Coolamon, NSW, 2701"}, {"id": 58, "name": "COTTONTAILS", "address": ""}, {"id": 59, "name": "COUNTRY HOPE", "address": "25 Blake Street, Wagga Wagga, NSW, 2650"}, {"id": 60, "name": "CRACKER JACK CASH", "address": "CRACKER JACK"}, {"id": 61, "name": "CRDAC", "address": ""}, {"id": 62, "name": "CRUST", "address": "59 Baylis St, WAGGA WAGGA, NSW, 2650"}, {"id": 63, "name": "Crystal Restaurant (Boat Club)", "address": "Crystal Restaurant (Boat Club), Plumpton Road"}, {"id": 64, "name": "Crystal Restaurant (The Rock)", "address": "Crystal Restaurant"}, {"id": 65, "name": "CSU CATERING", "address": ""}, {"id": 66, "name": "Das Melzer", "address": "116 Hoskins Street, Temora, NSW, 2666"}, {"id": 67, "name": "Dhaba delights", "address": "53 Avocet Drive, Estella, NSW, 2650"}, {"id": 68, "name": "Diamond Coffee Club", "address": ""}, {"id": 69, "name": "DIOCESE OF WAGGA WAGGA", "address": "Trading as: Vianney College, BOOROOMA, NSW, 2650"}, {"id": 70, "name": "Doo duck inn", "address": "44-66 Fernleigh road mt Austin, Wggga wagga, NSW, 2650"}, {"id": 71, "name": "DSM Nutritional Products", "address": "41 Edison Road, wagga wagga, NSW, 2650"}, {"id": 72, "name": "Early Bird Cafe", "address": "153 Fitzmaurice Street, Wagga Wagga, NSW, 2650"}, {"id": 73, "name": "EARLY YEARS GLENFIELD", "address": "60 Pinaroo Drive, GLENFIELD PARK, NSW, 2650"}, {"id": 74, "name": "Early Years Turvey Park", "address": "TURVEY PARK, NSW, 2650"}, {"id": 75, "name": "Embellish Catering", "address": "75 William street, Gundagai, NSW, 2722"}, {"id": 76, "name": "FARMERS", "address": ""}, {"id": 77, "name": "FITZMAURICE ST CAFE", "address": "FITZMAURICE ST CAFE"}, {"id": 78, "name": "FOOD DEPOT", "address": "The Food Depo WAGGA BASE, wagga wagga, nsw, 2650"}, {"id": 79, "name": "FOOD I AM", "address": "FOOD I AM"}, {"id": 80, "name": "Asian BBQ", "address": "FOOD I AM"}, {"id": 81, "name": "Asian Essentials", "address": "FOOD I AM"}, {"id": 82, "name": "BBQ & Charcoal Class", "address": "FOOD I AM"}, {"id": 83, "name": "Curries Class", "address": "FOOD I AM"}, {"id": 84, "name": "Dim Sum", "address": "FOOD I AM"}, {"id": 85, "name": "FIA Order", "address": "FOOD I AM"}, {"id": 86, "name": "Grazing", "address": "FOOD I AM"}, {"id": 87, "name": "Indian Class", "address": "FOOD I AM"}, {"id": 88, "name": "International Street Food", "address": "FOOD I AM"}, {"id": 89, "name": "MEXICAN CLASS FOOD I AM", "address": "FOOD I AM"}, {"id": 90, "name": "Middle Eastern", "address": "FOOD I AM"}, {"id": 91, "name": "Moroccan Class", "address": "FOOD I AM"}, {"id": 92, "name": "Seafood Masterclass", "address": "FOOD I AM"}, {"id": 93, "name": "Spanish Class FOOD I AM", "address": "FOOD I AM"}, {"id": 94, "name": "Stress Free Xmas Class", "address": "FOOD I AM"}, {"id": 95, "name": "Team Build", "address": "FOOD I AM"}, {"id": 96, "name": "Thai Feast", "address": "FOOD I AM"}, {"id": 97, "name": "Vietnamese", "address": "FOOD I AM"}, {"id": 98, "name": "FOOD WORKS GUNDAGAI", "address": ""}, {"id": 99, "name": "G-THAI cash", "address": "G-THAI"}, {"id": 100, "name": "Ganmain Bakery", "address": ""}, {"id": 101, "name": "GARDEN VILLAGE", "address": "INGENIA GARDENS WAGGA WAGGA, WAGGA WAGGA, NSW, 2650"}, {"id": 102, "name": "GATHER CAFE TUMBA", "address": ""}, {"id": 103, "name": "GIUSEPPES", "address": ""}, {"id": 104, "name": "Glory Enterprise Pty Ltd", "address": "Kiosk K10, Wagga Wagga Marketplace, 87 Baylis St, Wagga Wagga NSW 2056, Wagga wagga, Nsw, 2650"}, {"id": 105, "name": "GOLDEN BOWL CASH", "address": "GOLDEN BOWL"}, {"id": 106, "name": "GOLDEN CHICKEN TUMUT", "address": ""}, {"id": 107, "name": "Golden Crown Hotel", "address": "Golden Crown Hotel, Uranquinty, NSW, 2652"}, {"id": 108, "name": "Uranquinty Hotel Bar", "address": "Golden Crown Hotel, Uranquinty, NSW, 2652"}, {"id": 109, "name": "Uranquinty Hotel Kitchen", "address": "Golden Crown Hotel, Uranquinty, NSW, 2652"}, {"id": 110, "name": "GONE BARNY", "address": ""}, {"id": 111, "name": "GOOD START GLENFIELD", "address": "Glenfield, 2650"}, {"id": 112, "name": "Goodstart Early Learning Wagga Wagga Lake Albert R", "address": "KOORINGAL, NSW, 2650"}, {"id": 113, "name": "GOODSTART ESTELLA", "address": ""}, {"id": 114, "name": "Goodstart Kooringal", "address": "GoodStart Early Learning Kooringal, KOORINGAL, NSW, 2650"}, {"id": 115, "name": "GOODSTART MORGAN STREET", "address": "Good Start Early Learning"}, {"id": 116, "name": "GOODSTART STATION PLACE", "address": "6-10 Station Place, Wagga, Wagga, NSW, 2650"}, {"id": 117, "name": "GrainCorp", "address": "1 Wentworth Street Wagga Wagga NSW 2650 Australia, Wagga Wagga, NSW, 2650"}, {"id": 118, "name": "Grand Pacific Health", "address": "1/21 Blake Street, WAGGA WAGGA, NSW, 2650"}, {"id": 119, "name": "Grill'd Wagga Wagga", "address": "Shop 1, 87 Baylis St Wagga Wagga NSW 2650, Wagga Wagga, NSW, 2650"}, {"id": 120, "name": "GTES Complete Apprentice Management", "address": "161 Hammond Avenue, Wagga Wagga NSW 2650, Wagga Wagga, NSW, 2650"}, {"id": 121, "name": "Gundagai Bakery", "address": "GUNDAGAI BAKERY"}, {"id": 122, "name": "Habibi Chicken", "address": "96 Fitzmaurice St, Wagga Wagga, NSW, 2650"}, {"id": 123, "name": "Hadley’s Cafe", "address": "19 Kansas Dr, Tolland, NSW, 2650"}, {"id": 124, "name": "Hanok Korean BBQ Wagga Wagga", "address": "85 Baylis St, Wagga Wagga, NSW, 2650"}, {"id": 125, "name": "Happysoul catering pvt ltd", "address": "Junee ex-services memorial club\r\n75 broadway street, Junee, Nsw, 2663"}, {"id": 126, "name": "HEMANTH8-hemanth Baroorker", "address": ""}, {"id": 127, "name": "HIDE", "address": "5 Merong Place, Bourkelands, NSW, 2650"}, {"id": 128, "name": "Hotspot Fitness Wagga", "address": "3, 10-12 Kooringal Road, East Wagga, NSW, 2650"}, {"id": 129, "name": "IGA Ashmont", "address": ""}, {"id": 130, "name": "INDIAN RASOI", "address": "Shop 10, MOUNT AUSTIN, NSW, 2650"}, {"id": 131, "name": "Indian Tandoori", "address": "Indian Tandoori, 81 Peter St, NSW"}, {"id": 132, "name": "INDIE SCHOOL WAGGA", "address": ""}, {"id": 133, "name": "INFUSO", "address": "MOUNT AUSTIN, NSW, 2650"}, {"id": 134, "name": "International Hotel Wagga Wagga", "address": "2 Lake Albert Road, Wagga Wagga, NSW, 2650"}, {"id": 135, "name": "J&B GROUP AUSTRALIA PTY LTD (CHAR QUE)", "address": "Shop 17, 44-66 Fernleigh rd Mount Austin 2650 (Turvey park shopping centre), Wagga wagga, NSW, 2650"}, {"id": 136, "name": "James Vickers", "address": ""}, {"id": 137, "name": "jardine's cafe", "address": "2/68 Baylis Street\r\nWagga Wagga, Wagga Wagga, NSW, 2650"}, {"id": 138, "name": "JARDINES CAFE", "address": "2/86 BAYLIS ST, WAGGA WAGGA, NSW, 2650"}, {"id": 139, "name": "JD KEBABS", "address": "JD KEBABS"}, {"id": 140, "name": "Junee Asian Thai Resturant", "address": ""}, {"id": 141, "name": "JUNEE BAKERY", "address": "JUNEE BAKERY"}, {"id": 142, "name": "Junee Ex Services Memorial Club", "address": "75 Broadway Street, Junee, NSW, 2663"}, {"id": 143, "name": "JUNEE HOTEL", "address": "17 seignior street, junee, nsw, 2663"}, {"id": 144, "name": "Junee Kids Early Learning", "address": ""}, {"id": 145, "name": "JUNEE LICORICE FACTORY", "address": "JUNEE LICORICE FACTORY"}, {"id": 146, "name": "Junee Netball Association", "address": "C/- 1203 Eurongilly Road,\r\nEURONGILLY  NSW  2663"}, {"id": 147, "name": "JUNGLE DUKE", "address": "125 Fiitzmaurice Street, Wagga, NSW, 2650"}, {"id": 148, "name": "Jungle Duke Bar", "address": "125 Fiitzmaurice Street, Wagga, NSW, 2650"}, {"id": 149, "name": "Jungle Duke Restaurant", "address": "125 Fiitzmaurice Street, Wagga, NSW, 2650"}, {"id": 150, "name": "Kapooka Army Base", "address": ""}, {"id": 151, "name": "KEBABALISH", "address": "KEBAB'ALISH"}, {"id": 152, "name": "Kildare Boarding House", "address": "KILDARE BOARDING HOUSE"}, {"id": 153, "name": "KILDARE CANTEEN", "address": "KILDARE CATHOLIC COLLEGE, WAGGA WAGGA, NSW, 2650"}, {"id": 154, "name": "KNIGHTS MEATS", "address": "187 Fitzmaurice St, WAGGA WAGGA, NSW, 2650"}, {"id": 155, "name": "KOORINGAL BUTCHERY", "address": ""}, {"id": 156, "name": "KOORINGAL CHINESE RESTAURANT", "address": "KOORINGAL CHINESE RESTAURANT"}, {"id": 157, "name": "KOORINGAL HOTEL", "address": "88 fay Avenue, Kooringal, New South Wales, 2650"}, {"id": 158, "name": "KOORINGAL PUBLIC", "address": "KOORINGAL PUBLIC SCHOOL"}, {"id": 159, "name": "Kooringal Thai Kitchen", "address": "Tammy Thai Kitchen, Kooringal, NSW, 2650"}, {"id": 160, "name": "KungFu Dumplings", "address": ""}, {"id": 161, "name": "Kurrajong Catering", "address": "Lord Baden Powell Drive, Wagga Wagga, NSW, 2650"}, {"id": 162, "name": "LA PORCHETTA", "address": "La Porchetta\r\n16-18 Baylis Street, Wagga Wagga, NSW, 2650"}, {"id": 163, "name": "LAKE ROAD VET", "address": ""}, {"id": 164, "name": "LAKE VILLAGE BAKERY", "address": "LAKE VILLAGE BAKERY"}, {"id": 165, "name": "Lake Village Butchery", "address": ""}, {"id": 166, "name": "LAKE VILLAGE TAKE AWAY", "address": "LAKE VILLAGE TAKEAWAY"}, {"id": 167, "name": "Lake Village Takeaway", "address": "Shop 3/39 Gregory Cres, Lake Albert, NSW, 2650"}, {"id": 168, "name": "Lamottes Catering", "address": "LAMOTTES CATERING, Kooringal, NSW, 2650"}, {"id": 169, "name": "Li's Chinese Restaurant", "address": ""}, {"id": 170, "name": "LITTLE KINDY JUNEE", "address": ""}, {"id": 171, "name": "LITTLE LUNCH ON FORSYTH", "address": "180 forsyth street, wagga wagga, NSW, 2650"}, {"id": 172, "name": "LITTLE WONDERS ESTELLA", "address": "59 Avocet Drive, Estella, 2650"}, {"id": 173, "name": "Live Better", "address": ""}, {"id": 174, "name": "LIVEBETTER SERVICES LIMITED", "address": "129-131 Byng St Orange, ORANGE, NSW, 2800"}, {"id": 175, "name": "LOCKHART COMMERCIAL HOTEL", "address": ""}, {"id": 176, "name": "LOUISE SMITH", "address": ""}, {"id": 177, "name": "MAGPIES NEST", "address": "MAGPIES NEST\r\n20 Pine Gully Road, WAGGA WAGGA, NSW, 2650"}, {"id": 178, "name": "MAGUIRES PTY LTD", "address": ""}, {"id": 179, "name": "MANGOPLAH COOKARDINNIA UNITED - EASTLAKES FOOTBALL CLUB", "address": ""}, {"id": 180, "name": "Marrar Kitchen & Co", "address": "York Street, Marrar, NSW, 2652"}, {"id": 181, "name": "Meccanico Espresso and Wine", "address": "Meccanico Espresso + Wine\r\n171 Fitzmaurice Street, Wagga Wagga, NSW, 2650"}, {"id": 182, "name": "MERCURE", "address": "Mercure Wagga Wagga\r\nPO Box 2537, Wagga Wagga, NSW, 2650"}, {"id": 183, "name": "MOCK ORANGE CAFE", "address": "Shop 1-2/39 Gregory Crescent, LAKE ALBERT, NSW, 2650"}, {"id": 184, "name": "Momentum Education", "address": ""}, {"id": 185, "name": "MOUNT AUSTIN HIGH SCHOOL", "address": ""}, {"id": 186, "name": "MR LAWRENCE", "address": ""}, {"id": 187, "name": "Mr Lawrence Bar", "address": ""}, {"id": 188, "name": "Mr Lawrence Cafe/Resturant", "address": ""}, {"id": 189, "name": "Mr Lawrence Calvary", "address": ""}, {"id": 190, "name": "MY CHEF", "address": "MY CHEF"}, {"id": 191, "name": "My Fruit and Veg Shop", "address": "55 Wynyard Street, Tumut, NSW, 2720"}, {"id": 192, "name": "NAZAC PTY LTD", "address": "naomi.nazac@outlook.com\r\nTarcutta Ampol 32 sydney st Tarcutta, Tarcutta, NSW, 2652"}, {"id": 193, "name": "Nest Cinema Cafe Books", "address": "56 Winton STreet, Tumbarumba NSW 2653, Tumbarumba, NSW, 2653"}, {"id": 194, "name": "New Bomen Take Away", "address": "21 Bomen Road,, BOMEN, NSW, 2650"}, {"id": 195, "name": "New Oceanic - Morgan Street", "address": "New Oceanic Take Away, Wagga Wagga, NSW, 2650"}, {"id": 196, "name": "KOORINGAL- OCEANIC", "address": "New Oceanic Take Away, Wagga Wagga, NSW, 2650"}, {"id": 197, "name": "MORGAN ST - OCEANIC", "address": "New Oceanic Take Away, Wagga Wagga, NSW, 2650"}, {"id": 198, "name": "Nimbo Fork Lodge", "address": "330 Nimbo Road, Killimicat, New South Wales, 2720"}, {"id": 199, "name": "Noodle Paradise", "address": "NOODLE PARADISE"}, {"id": 200, "name": "OFGC", "address": "ORIGINAL FLAME GRILLED CHICKEN"}, {"id": 201, "name": "OLIVER BROWN", "address": "Shop 5, 135 Baylis st Wagga Wagga NSW 2650, Wagga Wagga, NSW, 2650"}, {"id": 202, "name": "On the plate catering", "address": "15 mirrul street, Glenfield park, New South Wales, 2650"}, {"id": 203, "name": "Oriental hotel", "address": ""}, {"id": 204, "name": "Osaucy", "address": "Shop 2-12 Rainbow Drive Estella NSW2650, Wagga Wagga, NSW, 2650"}, {"id": 205, "name": "Otto's Pizzeria", "address": "3 Morris Crescent, Gobbagombalin, NSW, 2650"}, {"id": 206, "name": "PAD THAI NOODLES", "address": ""}, {"id": 207, "name": "PALM AND PAWN", "address": "PALM AND PAWN, WAGGA WAGGA, NSW, 2650"}, {"id": 208, "name": "PALM AND PAWN BAR", "address": "PALM AND PAWN, WAGGA WAGGA, NSW, 2650"}, {"id": 209, "name": "PALM AND PAWN RESTURANT", "address": "PALM AND PAWN, WAGGA WAGGA, NSW, 2650"}, {"id": 210, "name": "PAP222-john preston", "address": ""}, {"id": 211, "name": "PARRA TOUCH NSW", "address": ""}, {"id": 212, "name": "PCYC", "address": ""}, {"id": 213, "name": "POSSUM PATCH", "address": ""}, {"id": 214, "name": "POT & KETTLE", "address": "POT & KETTLE"}, {"id": 215, "name": "POTA PASTA", "address": ""}, {"id": 216, "name": "PRO PATRIA CENTRE ANGELO STRANO", "address": ""}, {"id": 217, "name": "PSD", "address": "PO Box 43, ARIAH PARK, NSW, 2665"}, {"id": 218, "name": "Quality inn Carriage House.", "address": "7 Eunony Bridge Rd, East Wagga Wagga, NSW, 2650"}, {"id": 219, "name": "QuickB2B Cafe", "address": "33 Storm St, Cloudy Bay, NSW, 2260"}, {"id": 220, "name": "QuickB2B Flaming Grill", "address": "359 Fletcher Street, Dalby North, NSW, 4405"}, {"id": 221, "name": "QuickB2B Steak House", "address": "44 Beachside Ave, Teal Bay, NSW, 2260"}, {"id": 222, "name": "Quinty hotel", "address": "30-34Morgan Street, Uranquinty, NSW, 2652"}, {"id": 223, "name": "RAAF BASE", "address": ""}, {"id": 224, "name": "RAILWAY CAFE JUNEE", "address": "RAILWAY CAFE JUNEE"}, {"id": 225, "name": "RED COW JUNEE", "address": ""}, {"id": 226, "name": "Red Mandolin Cafe", "address": "SHOP 3\r\n34 ALLENBY RD ROSSMORE NSW 2651, Forest Hill, NSW, 2651"}, {"id": 227, "name": "RESPECT WOODHAVEN LOCHART", "address": ""}, {"id": 228, "name": "Risk Strategy Management Pty Ltd", "address": "9 Beauty Point Ave, Turvey Park, NSW, 2650"}, {"id": 229, "name": "RIVERGUM RESTAURANT & BAR", "address": ""}, {"id": 230, "name": "Riverina Cardiology", "address": "20 Docker Street, Wagga Wagga, NSW, 2650"}, {"id": 231, "name": "RIVERINA GUMS ESTATE PTY LTD", "address": "44 Dalman Pkwy, GLENFIELD PARK, NSW, 2650"}, {"id": 232, "name": "RIVERINA HOTEL WAGGA PTY LTD", "address": "Riverina Hotel PTYLTD, WAGGA WAGGA, NSW, 2650"}, {"id": 233, "name": "Riverina Kids Early Learning Centre", "address": ""}, {"id": 234, "name": "Riverina Water Hammond", "address": "Riverina Water, EAST WAGGA WAGGA, NSW, 2650"}, {"id": 235, "name": "Riverina Wholesale Bakery", "address": "Riverina Wholesale Bakery, WAGGA WAGGA, NSW, 2650"}, {"id": 236, "name": "Riverside Cafe Tumut", "address": "Romina Viglianti"}, {"id": 237, "name": "RIVMED", "address": "RIVMED, WAGGA WAGGA, NSW, 2650"}, {"id": 238, "name": "RJJC", "address": "Dept of Communities & Justice\r\nRiverina Youth Justice Centre, Cnr Fernleigh and Glenfield Roads, Wagga Wagga, 2650"}, {"id": 239, "name": "RLLS", "address": "Rural Local Land Services\r\nBuilding 24 Darnell Smith Drive, CSU, Wagga Wagga, NSW, 2650"}, {"id": 240, "name": "Roll viet baylis", "address": "1/123 baylis street, Wagga Wagga, NSW, 2650"}, {"id": 241, "name": "Roll Viet Cafe", "address": "2/123 Baylis street, Wagga Wagga, NSW, 2650"}, {"id": 242, "name": "Romanos Hotel", "address": ""}, {"id": 243, "name": "Rosemary Vella", "address": "93 Fernleigh Rd, Turvey Park, New South Wales, 2650"}, {"id": 244, "name": "Royal  Hotel Tumut", "address": ""}, {"id": 245, "name": "ROYAL PETROLEUM PTY LTD", "address": ""}, {"id": 246, "name": "ROYAL TAV", "address": ""}, {"id": 247, "name": "Rsl Chinese", "address": "RSL CHINESE RESTAURANT"}, {"id": 248, "name": "RSL Club BAR", "address": "RSL Club Bar"}, {"id": 249, "name": "RSM Australia Pty Ltd", "address": "77 Gurwood Street, WAGGA WAGGA, NSW, 2650"}, {"id": 250, "name": "RULES CLUB BISTRO", "address": "RULES CLUB BISTRO, WAGGA WAGGA, NSW, 2650"}, {"id": 251, "name": "SANDWICH CHEFS NEW Umasrinivas Pty Ltd", "address": "Shop No. 38\r\nThe Market Place \r\n87 Baylis Street, Wagga Wagga, NSW, 2650"}, {"id": 252, "name": "SETTLERS VILLAGE", "address": "SETTLERS VILLAGE, ESTELLA, NSW, 2650"}, {"id": 253, "name": "SISPRESSO - BARTY'S CAFE", "address": ""}, {"id": 254, "name": "Smoking Butcher", "address": "Smoking Butcher, Wagga Wagga, NSW, 2650"}, {"id": 255, "name": "Soul Orgin Glory enterprise pty Ltd", "address": "Kiosk 10 Market Place, Wagga Wagga, NSW, 2650"}, {"id": 256, "name": "Soul Origin", "address": ""}, {"id": 257, "name": "SOUTH WAGGA BUTCHERY", "address": "14/82 Murray St, Wagga Wagga, NSW, 2650"}, {"id": 258, "name": "South Wagga Public School", "address": "140 Edward Street, Wagga, NSW, 2650"}, {"id": 259, "name": "Spare", "address": "143 Fitzmaurice Street, Wagga Wagga, NSW, 2650"}, {"id": 260, "name": "Spare Resturant & Bar", "address": ""}, {"id": 261, "name": "SPICE PARADISE INDIAN RESTURANT", "address": ""}, {"id": 262, "name": "SPORTIES PUB", "address": "Sportsmans Club Hotel, WAGGA WAGGA, NSW, 2650"}, {"id": 263, "name": "STAR HOTEL TUMUT", "address": ""}, {"id": 264, "name": "STELLAR STAR", "address": ""}, {"id": 265, "name": "STICKY FINGERS", "address": "7/231 Bourke street (the old bakery near the iga supermarket), Wagga Wagga, NSW, 2650"}, {"id": 266, "name": "Sushi Hub Wagga Wagga", "address": ""}, {"id": 267, "name": "SWEETIE", "address": "96 fitzmaurice st upstairs, Wagga, NSW, 2650"}, {"id": 268, "name": "TAKE AWAY SOUTH CITY", "address": "South City Takeaway"}, {"id": 269, "name": "Tarcutta Club", "address": "TARCUTTA CLUB"}, {"id": 270, "name": "Tarcutta Hotel", "address": "4504 Hume Highway, Tarcutta, NSW, 2652"}, {"id": 271, "name": "TASTY TIBETAN TREATS", "address": "56 Forsyth Street, Wagga Wagga, NSW, 2650"}, {"id": 272, "name": "TATJANA CREALY acc", "address": "TATJANA CREALY"}, {"id": 273, "name": "TBH OPERATIONS PTY LTD", "address": "55 Main Street, Lake Albert, NSW, 2650"}, {"id": 274, "name": "THAIGGA", "address": "WAGGA WAGGA, NSW, 2650"}, {"id": 275, "name": "THE BLACK SWAN", "address": "37 Gardiner Street, NORTH WAGGA, NSW, 2650"}, {"id": 276, "name": "THE BREAD CROCK", "address": "THE BREAD CROCK"}, {"id": 277, "name": "THE BREW", "address": "67+Coleman+St, TURVEY+PARK, NSW, 2650"}, {"id": 278, "name": "THE CHARLES (Roundabout)", "address": "82 Tarcutta St, WAGGA WAGGA, NSW, 2650"}, {"id": 279, "name": "The Crossing Motel", "address": "39 Seignior Street, Junee, New South Wales, 2663"}, {"id": 280, "name": "The Food Wagon", "address": "181 Bunyons Rd, Blfrayden, New South Wales, 2656"}, {"id": 281, "name": "The Good Grind", "address": ""}, {"id": 282, "name": "THE LAWSON MOTEL", "address": "117/121 TARCUTTA ST, WAGGA, NSW, 2650"}, {"id": 283, "name": "The Local Pizzeria Tumut", "address": "35 Wynyard street, Tumut, NSW, 2720"}, {"id": 284, "name": "THE PRESS", "address": "34 Johnston Street, Wagga Wagga, NSW, 2650"}, {"id": 285, "name": "The Railway Hotel Temora", "address": ""}, {"id": 286, "name": "The Silos Accommodation pty ltd", "address": "188 Kameruka Lane, Eurongilly, NSW, 2663"}, {"id": 287, "name": "The Toast Cafe", "address": "54 Wynyard St, Tumut ( Toast Cafe Tumut ), Tumut, NSW, 2720"}, {"id": 288, "name": "The Victoria Hotel", "address": "The Victoria Hotel, WAGGA WAGGA, NSW, 2650"}, {"id": 289, "name": "THE LOFT", "address": "The Victoria Hotel, WAGGA WAGGA, NSW, 2650"}, {"id": 290, "name": "THE VICTORIA HOTEL BISTRO", "address": "The Victoria Hotel, WAGGA WAGGA, NSW, 2650"}, {"id": 291, "name": "The Wandering Chef", "address": ""}, {"id": 292, "name": "THE WILD VINE", "address": ""}, {"id": 293, "name": "Thick Snag Butchery", "address": "2/44 Berembee Road Bourkelands 2650, Bourkelands, New South Wales, 2650"}, {"id": 294, "name": "THIRSTY CROW BREWERY", "address": "Thirsty Crow Brewery, WAGGA WAGGA, NSW, 2650"}, {"id": 295, "name": "THORNE STREET CAFE", "address": ""}, {"id": 296, "name": "TIGER MOTH", "address": ""}, {"id": 297, "name": "Tillys bar wagga", "address": "109 Baylis st, wagga wagga, Nsw, 2650"}, {"id": 298, "name": "Tillys Wagga", "address": "109 Baylis Street, Wagga Wagga, NSW, 2650"}, {"id": 299, "name": "Tilly's Bar", "address": "109 Baylis Street, Wagga Wagga, NSW, 2650"}, {"id": 300, "name": "Tilly's Kitchen", "address": "109 Baylis Street, Wagga Wagga, NSW, 2650"}, {"id": 301, "name": "TOGETHER CHURCH", "address": "TOGETHER CHURCH"}, {"id": 302, "name": "TOWNHOUSE HOTEL", "address": "PIN: C259XY, WAGGA WAGGA, NSW, 2650"}, {"id": 303, "name": "TRAIL STREET", "address": "TRAIL STREET, WAGGA WAGGA, NSW, 2650"}, {"id": 304, "name": "Tumba CHINESE", "address": "47 Winton St, Tumbarumba, New South Wales 2653 Australia"}, {"id": 305, "name": "Tumba Takeaway", "address": ""}, {"id": 306, "name": "TUMBARUMBA HOTEL", "address": "TUMBARUMBA HOTEL"}, {"id": 307, "name": "Tumbarumba Servo", "address": "Bp Tumbarumba Servo \r\n21 Bridge Street \r\nTumbarumba 2653, Tumbarumba, Nsw, 2653"}, {"id": 308, "name": "Tumut bowling club", "address": ""}, {"id": 309, "name": "Tumut Kindy", "address": "142 Russell St, Tumut, NSW, 2720"}, {"id": 310, "name": "TUMUT PIE IN THE SKY BAKERY", "address": ""}, {"id": 311, "name": "TURVEY PARK HOTEL BAR", "address": "TURVEY PARK HOTEL, WAGGA WAGGA, NSW, 2650"}, {"id": 312, "name": "TURVEY TAVERN", "address": "TURVEY PARK HOTEL"}, {"id": 313, "name": "Turvey Park Hotel", "address": "TURVEY PARK HOTEL"}, {"id": 314, "name": "Turvey Tops Chinese Takeaway", "address": "TURVEY PARK, NSW, 2650"}, {"id": 315, "name": "UNEKE LOUNGE", "address": "UNEKE LOUNGE, WAGGA WAGGA, NSW, 2650"}, {"id": 316, "name": "UNION HOTEL NEW", "address": ""}, {"id": 317, "name": "UPA GUMLEIGH GARDENS", "address": "29-35 Shaw Street Wagga Wagga, Wagga Wagga, NSW, 2650"}, {"id": 318, "name": "Urana Takeaway & Newsagent", "address": "PO Box 3693, Marsfield, NSW, 2122"}, {"id": 319, "name": "Vanilla Pod NEW", "address": "Vanilla Pod, WAGGA WAGGA, NSW, 2650"}, {"id": 320, "name": "VINNIES FRUITZ", "address": "VINNIES FRUITZ"}, {"id": 321, "name": "WAGGA AMBULANCE", "address": ""}, {"id": 322, "name": "WAGGA CATERING", "address": "WAGGA CATERING SERVICE, EAST WAGGA WAGGA, NSW, 2650"}, {"id": 323, "name": "WAGGA CITY COUNCIL - EMAIL", "address": "WAGGA CITY COUNCIL"}, {"id": 324, "name": "Wagga Country Club", "address": "PLumpton Rd, Wagga Wagga, NSW, 2650"}, {"id": 325, "name": "Wagga High", "address": ""}, {"id": 326, "name": "WAGGA POLICE SOCIAL CLUB", "address": ""}, {"id": 327, "name": "WAGGA RSL", "address": "WAGGA WAGGA, NSW, 2650"}, {"id": 328, "name": "WAGGA TAFE", "address": ""}, {"id": 329, "name": "Wagga Wagga City Council", "address": "Wagga Airport Cafe, Forest Hill, NSW, 2651, NSW, 2651"}, {"id": 330, "name": "Wagga Wagga combined hockey association", "address": "Jubilee park\r\nBourke street, Wagga, NSW, 2650"}, {"id": 331, "name": "Wagga Wagga Community Aged Care", "address": "20 Hely Avenue, Turvey park, NSW, 2650"}, {"id": 332, "name": "Wagga Wagga Country Club", "address": "57 Plumpton Road, Lake Albert, NSW, 2650"}, {"id": 333, "name": "Wagga Wagga Par 3 and Driving Range", "address": "79 Narrung Street, Wagga Wagga, NSW, 2650"}, {"id": 334, "name": "WAGGA WAGGA POLICE STATION", "address": "WAGGA WAGGA POLICE STATION"}, {"id": 335, "name": "Wagga Woodfired Pizza", "address": "WAGGA WOODFIRE WAGON, Mt Austin, NSW, 2650"}, {"id": 336, "name": "WES WALKABOUT", "address": "WES'S WALKABOUT"}, {"id": 337, "name": "WESTEND SANDWICH SHOP", "address": "39 Pearson St, Wagga Wagga NSW 2650, GLENFIELD PARK, NSW, 2650"}, {"id": 338, "name": "WILLIAM FARRER", "address": ""}, {"id": 339, "name": "WING CHENG", "address": "Edward Street, wagga, NSW, 2650"}, {"id": 340, "name": "WISK AND DISH", "address": ""}, {"id": 341, "name": "WOOLPACK HOTEL TUMUT", "address": ""}, {"id": 342, "name": "WWEYLC Boorooma", "address": "1 Phar Lap Place, BOOROOMA, NSW, 2650"}];
+let customers = (()=>{ const s=localStorage.getItem('lp_cust'); if(s){ const p=JSON.parse(s); if(p.length>0) return p; } return JSON.parse(JSON.stringify(BUILTIN_CUSTOMERS)); })();
+let settings  = Object.assign({},DEF_SETTINGS,JSON.parse(localStorage.getItem('lp_set')||'{}'));
+function saveCust(){ localStorage.setItem('lp_cust',JSON.stringify(customers)); }
+function saveSet(){  localStorage.setItem('lp_set', JSON.stringify(settings));  }
+
+// ─────────────────────────────────────────────────────────────────
+// APP STATE
+// ─────────────────────────────────────────────────────────────────
+let S = {
+  screen:'list',
+  search:'', sugg:[],
+  selected:null,
+  status:null, statusTimer:null,
+  printingN:null, progress:null,
+  dot:'#facc15', printers:[],
+  editId:null, formName:'', formAddr:'',
+  addSugg:[],
+  showNumpad:false, numVal:'',
+  csvPreview:null,
+};
+let abortPrint=false;
+
+function setState(patch){ Object.assign(S,patch); render(); }
+function go(screen){ S.screen=screen; render(); }
+
+function showStatus(type,msg,ms=3500){
+  if(S.statusTimer) clearTimeout(S.statusTimer);
+  S.status={type,msg};
+  S.statusTimer=setTimeout(()=>{S.status=null;render();},ms);
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PRINTER / ZPL
+// ─────────────────────────────────────────────────────────────────
+const getBP=()=>`http://${settings.bpHost}:9090`;
+async function sendZPL(uid,zpl){
+  try{const r=await fetch(`${getBP()}/write`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:{uid},data:zpl})});return r.ok;}catch{return false;}
+}
+async function checkDot(){
+  try{const r=await fetch(`${getBP()}/available`);const d=await r.json();S.dot=(d.printer||[]).length?'#4ade80':'#f87171';}catch{S.dot='#f87171';}
+  render();
+}
+async function refreshPrinters(){
+  try{const r=await fetch(`${getBP()}/available`);const d=await r.json();S.printers=d.printer||[];S.dot=S.printers.length?'#4ade80':'#f87171';}catch{S.printers=[];S.dot='#f87171';}
+  render();
+}
+
+function buildZPL(name,address,caseNum,total,date){
+  const showAddr=settings.showAddress&&address&&address.trim();
+  const {labelW,labelH,fontName,fontCases,fontMeta}=settings;
+  let y=20,lines=[];
+  // Big customer name
+  lines.push(`^FO20,${y}^A0N,${fontName},${fontName}^FB${labelW-40},2,0,L^FD${name}^FS`);
+  y+=Math.ceil(fontName*1.2)+(showAddr?4:8);
+  // Address (if enabled)
+  if(showAddr){
+    lines.push(`^FO20,${y}^A0N,${fontMeta},${fontMeta}^FB${labelW-40},2,0,L^FD${address}^FS`);
+    y+=Math.ceil(fontMeta*2.2)+6;
+  }
+  // Divider
+  lines.push(`^FO20,${y}^GB${labelW-40},3,3^FS`);y+=10;
+  // Big X of Y — centred
+  const xofyTxt=total>1?`${caseNum} of ${total}`:`${total}`;
+  lines.push(`^FO20,${y}^A0N,${fontCases},${fontCases}^FB${labelW-40},1,0,C^FD${xofyTxt}^FS`);
+  y+=fontCases+8;
+  // Date small at bottom
+  lines.push(`^FO20,${y}^A0N,${fontMeta},${fontMeta}^FD${date}^FS`);
+  return `^XA\n^PW${labelW}\n^LL${labelH}\n${lines.join('\n')}\n^XZ`;
+}
+
+async function printLabels(n){
+  if(!settings.printerUid){showStatus('err','No printer selected — go to Settings');return;}
+  const date=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  abortPrint=false;
+  S.progress={cur:0,total:n};render();
+  for(let i=1;i<=n;i++){
+    if(abortPrint){S.progress=null;S.printingN=null;showStatus('err','Cancelled');return;}
+    S.progress={cur:i,total:n};render();
+    const zpl=buildZPL(S.selected.name,S.selected.address||'',i,n,date);
+    const ok=await sendZPL(settings.printerUid,zpl);
+    if(!ok){S.progress=null;S.printingN=null;showStatus('err',`Failed on label ${i} of ${n}`);return;}
+    if(i<n)await new Promise(r=>setTimeout(r,300));
+  }
+  S.progress=null;S.printingN=null;
+  showStatus('ok',n===1?'✓ 1 label printed':`✓ ${n} labels printed — 1 of ${n} through ${n} of ${n}`);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CSV — tuned for QuickB2B format (*ContactName, POAddressLine1 etc)
+// ─────────────────────────────────────────────────────────────────
+function parseCSV(text){
+  const lines=text.trim().replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(Boolean);
+  if(lines.length<2)return[];
+  function splitLine(line){
+    const cols=[];let cur='';let q=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){q=!q;}
+      else if(c===','&&!q){cols.push(cur.trim());cur='';}
+      else{cur+=c;}
+    }
+    cols.push(cur.trim());
+    return cols.map(c=>c.replace(/^"|"$/g,'').trim());
+  }
+  const headers=splitLine(lines[0]).map(h=>h.replace(/^\*/,'').toLowerCase());
+  // Name column
+  const nameIdx=headers.findIndex(h=>h==='contactname'||h.includes('name')||h.includes('company')||h.includes('customer')||h.includes('client'));
+  // Address columns — QuickB2B uses POAddressLine1, POCity, PORegion, POPostalCode
+  const addrIdx  =headers.findIndex(h=>h==='pOaddressline1'||h==='poaddressline1'||h.includes('addressline1')||h.includes('address'));
+  const cityIdx  =headers.findIndex(h=>h==='pOcity'||h==='pocity'||h==='city'||h==='suburb');
+  const regionIdx=headers.findIndex(h=>h==='pOregion'||h==='poregion'||h==='region'||h==='state');
+  const postIdx  =headers.findIndex(h=>h==='pOpostalcode'||h==='popostalcode'||h==='postalcode'||h==='postcode');
+  const col=nameIdx>=0?nameIdx:0;
+  return lines.slice(1).map(line=>{
+    const cols=splitLine(line);
+    const name=(cols[col]||'').trim();
+    if(!name)return null;
+    // Build address from parts
+    const parts=[
+      addrIdx>=0?cols[addrIdx]:'',
+      cityIdx>=0?cols[cityIdx]:'',
+      regionIdx>=0?cols[regionIdx]:'',
+      postIdx>=0?cols[postIdx]:'',
+    ].map(p=>(p||'').trim()).filter(Boolean);
+    const address=parts.join(', ');
+    return{name,address};
+  }).filter(Boolean);
+}
+
+function processCSV(text){
+  if(!text||!text.trim()){showStatus('err','File appears empty');return;}
+  const parsed=parseCSV(text);
+  if(!parsed.length){showStatus('err','No names found in CSV');return;}
+  const existing=new Set(customers.map(c=>c.name.toLowerCase()));
+  const newOnes=parsed.filter(r=>!existing.has(r.name.toLowerCase()));
+  S.csvPreview={newOnes,skipped:parsed.length-newOnes.length};
+  render();
+}
+
+// CSV file input handler — set up ONCE outside render loop
+document.getElementById('csv-input').addEventListener('change',function(){
+  const file=this.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>processCSV(e.target.result);
+  reader.onerror=()=>showStatus('err','Could not read file');
+  reader.readAsText(file);
+  this.value=''; // reset so same file can be picked again
+});
+
+// ─────────────────────────────────────────────────────────────────
+// SVG
+// ─────────────────────────────────────────────────────────────────
+function ic(d,size=22,color='currentColor'){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+}
+const D={
+  bolt:   'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  back:   'M19 12H5M12 19l-7-7 7-7',
+  cog:    'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z',
+  plus:   'M12 5v14M5 12h14',
+  trash:  'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',
+  check:  'M20 6L9 17l-5-5',
+  search: 'M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z',
+  prnt:   'M7 17H5a2 2 0 01-2-2V9a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2h-2M9 21H15V13H9zM7 7V3h10v4',
+  ref:    'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15',
+  up:     'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12',
+  layers: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+  edit:   'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
+  font:   'M4 7V4h16v3M9 20h6M12 4v16',
+};
+
+// ─────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────
+const QUICK=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+
+function render(){
+  const root=document.getElementById('root');
+  root.innerHTML='';
+  const scr=document.createElement('div');
+  scr.className='screen';
+
+  // Progress overlay
+  if(S.progress){
+    const pct=Math.round((S.progress.cur/S.progress.total)*100);
+    scr.innerHTML+=`<div class="overlay">
+      <div style="font-size:13px;color:#888;letter-spacing:1px">PRINTING</div>
+      <div style="font-size:72px;font-weight:700;color:#FFD200;line-height:1">${S.progress.cur}<span style="font-size:28px;color:#555">/${S.progress.total}</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:13px;color:#555">${S.selected?.name||''}</div>
+      <button onclick="abortPrint=true" style="background:#1a0808;border:1px solid #f8717144;color:#f87171;border-radius:8px;padding:10px 24px;cursor:pointer;font-size:14px;font-family:inherit;margin-top:6px">Cancel</button>
+    </div>`;
+  }
+
+  if(S.screen==='list')     renderList(scr);
+  else if(S.screen==='import')    renderImport(scr);
+  else if(S.screen==='addCustomer') renderAddEdit(scr);
+  else if(S.screen==='print')    renderPrint(scr);
+  else if(S.screen==='settings')  renderSettings(scr);
+
+  root.appendChild(scr);
+
+  // Re-attach live input listeners after render
+  attachListeners();
+}
+
+function hdr(title,backScreen){
+  return `<div class="hdr">
+    ${backScreen?`<button class="btn-icon" onclick="go('${backScreen}')">${ic(D.back,19,'#666')}</button>`:`${ic(D.bolt,18,'#FFD200')}`}
+    <span class="htitle">${title}</span>
+    ${backScreen?'':'<div class="dot" id="dot-el" style="background:'+S.dot+';box-shadow:0 0 7px '+S.dot+'"></div><button class="btn-icon" onclick="go(\'settings\');refreshPrinters()" style="margin-left:4px">'+ic(D.cog,19,'#666')+'</button>'}
+  </div>`;
+}
+function statusHTML(){
+  if(!S.status)return'';
+  return`<div class="toast-${S.status.type}">${S.status.msg}</div>`;
+}
+
+// ── LIST ──────────────────────────────────────────────────────────
+function renderList(scr){
+  let custHTML='';
+  if(!customers.length){
+    custHTML='<div style="color:#444;text-align:center;padding:28px 0;font-size:14px">No customers yet — add or import below</div>';
+  } else {
+    customers.forEach((c,i)=>{
+      custHTML+=`<div class="card" style="cursor:pointer" onclick="selectCustomer(${i})">
+        <span style="font-size:20px">🏭</span>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:600">${esc(c.name)}</div>
+          ${c.address?`<div style="font-size:12px;color:#555;margin-top:2px">${esc(c.address)}</div>`:''}
+        </div>
+        <button class="btn-icon" onclick="event.stopPropagation();editCustomer(${i})" style="color:#444">${ic(D.edit,16,'#444')}</button>
+        <button class="btn-icon" onclick="event.stopPropagation();deleteCustomer(${i})" style="color:#333">${ic(D.trash,17,'#333')}</button>
+      </div>`;
+    });
+  }
+
+  let suggHTML='';
+  if(S.sugg.length){
+    suggHTML='<div class="sugg" id="sugg-box">';
+    S.sugg.forEach((c,i)=>{
+      suggHTML+=`<div class="srow" onclick="selectCustomerObj(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+        <span style="font-size:18px">🏭</span>
+        <div style="flex:1"><div style="font-weight:600">${esc(c.name)}</div>${c.address?`<div style="font-size:12px;color:#555">${esc(c.address)}</div>`:''}</div>
+        <span style="color:#FFD200;font-size:12px">PRINT →</span>
+      </div>`;
+    });
+    suggHTML+='</div>';
+  }
+
+  scr.innerHTML=`
+    ${hdr('LABEL QUICK-PRINT',null)}
+    <div class="body">
+      ${statusHTML()}
+      <div>
+        <div class="lbl">Customer / Supplier</div>
+        <div class="sugg-wrap">
+          <div class="search-wrap">
+            ${ic(D.search,16,'#444')}
+            <input class="search-inp" id="search-inp" placeholder="Type to find…" value="${esc(S.search)}" autocomplete="off"/>
+            ${S.search?`<button class="btn-icon" onclick="clearSearch()" style="font-size:20px;color:#555">×</button>`:''}
+          </div>
+          ${suggHTML}
+        </div>
+      </div>
+      ${!S.search?`
+        <div class="lbl">All customers (${customers.length})</div>
+        ${custHTML}
+      `:''}
+      <div class="grid2">
+        <button class="btn-y" onclick="openAdd()">${ic(D.plus,18)} Add</button>
+        <button class="btn-d" onclick="go('import')">${ic(D.up,18,'#FFD200')} Import CSV</button>
+      </div>
+    </div>`;
+}
+
+function attachListeners(){
+  const si=document.getElementById('search-inp');
+  if(si){
+    si.addEventListener('input',e=>{
+      S.search=e.target.value;
+      if(S.search.trim()){
+        const q=S.search.trim().toLowerCase();
+        const first=customers.filter(c=>c.name.toLowerCase().split(/\s+/)[0].startsWith(q));
+        const fallback=customers.filter(c=>c.name.toLowerCase().split(/\s+/).some(w=>w.startsWith(q)));
+        S.sugg=first.length?first:fallback;
+      } else { S.sugg=[]; }
+      render();
+      // Restore focus
+      const ni=document.getElementById('search-inp');
+      if(ni){ni.focus();const len=ni.value.length;ni.setSelectionRange(len,len);}
+    });
+  }
+  const ni=document.getElementById('name-inp');
+  if(ni){
+    ni.addEventListener('input',e=>{
+      S.formName=e.target.value;
+      S.addSugg=!S.editId&&S.formName.trim()?customers.filter(c=>c.name.toLowerCase().startsWith(S.formName.toLowerCase())).slice(0,4):[];
+      render();
+      const nn=document.getElementById('name-inp');
+      if(nn){nn.focus();const len=nn.value.length;nn.setSelectionRange(len,len);}
+    });
+    ni.addEventListener('keydown',e=>{ if(e.key==='Enter') saveCustomer(); });
+  }
+  const ai=document.getElementById('addr-inp');
+  if(ai){
+    ai.addEventListener('input',e=>{ S.formAddr=e.target.value; });
+    ai.addEventListener('keydown',e=>{ if(e.key==='Enter') saveCustomer(); });
+  }
+  // Range sliders
+  ['fontName','fontCases','fontMeta','labelW','labelH'].forEach(k=>{
+    const el=document.getElementById('rng-'+k);
+    if(el) el.addEventListener('input',e=>{ settings[k]=+e.target.value; saveSet(); updatePreview(); ; });
+  });
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function clearSearch(){ S.search='';S.sugg=[];render(); }
+function selectCustomer(i){ selectCustomerObj(customers[i]); }
+function selectCustomerObj(c){ S.selected=c;S.search='';S.sugg=[];S.status=null;S.numVal='';S.showNumpad=false;S.progress=null;go('print'); }
+function deleteCustomer(i){ customers.splice(i,1);saveCust();render(); }
+function editCustomer(i){ const c=customers[i];S.editId=c.id;S.formName=c.name;S.formAddr=c.address||'';S.addSugg=[];go('addCustomer'); }
+function openAdd(){ S.editId=null;S.formName='';S.formAddr='';S.addSugg=[];go('addCustomer'); }
+
+// ── IMPORT ────────────────────────────────────────────────────────
+function renderImport(scr){
+  let body='';
+  if(!S.csvPreview){
+    body=`
+      ${statusHTML()}
+      <div style="background:#141414;border:1px solid #222;border-radius:12px;padding:24px 20px;text-align:center">
+        <div style="color:#FFD200;margin-bottom:16px">${ic(D.up,40,'#FFD200')}</div>
+        <div style="font-size:16px;font-weight:600;color:#f0f0f0;margin-bottom:8px">Choose your QuickB2B CSV file</div>
+        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:20px">
+          Names + addresses imported automatically<br>
+          Works with QuickB2B <em>*ContactName</em> format
+        </div>
+        <!-- ANDROID FIX: label directly wraps/triggers the input, no JS click() needed -->
+        <label for="csv-input" class="file-label">
+          ${ic(D.up,20,'#000')} Tap Here to Choose File
+        </label>
+      </div>
+      <div class="info-box">
+        <div class="info-title">HOW TO EXPORT FROM QUICKB2B</div>
+        <div class="info-step">1. Log into your QuickB2B admin</div>
+        <div class="info-step">2. Customers → Customer List</div>
+        <div class="info-step">3. Click Export / Download CSV</div>
+        <div class="info-step">4. Save to phone, come back here, tap above</div>
+      </div>`;
+  } else {
+    const {newOnes,skipped}=S.csvPreview;
+    let rows=newOnes.slice(0,60).map(r=>`
+      <div class="preview-row">
+        <div style="font-weight:600">${esc(r.name)}</div>
+        ${r.address?`<div style="font-size:12px;color:#555;margin-top:2px">${esc(r.address)}</div>`:''}
+      </div>`).join('');
+    if(newOnes.length>60) rows+=`<div class="preview-row" style="color:#555">…and ${newOnes.length-60} more</div>`;
+    body=`
+      <div class="toast-ok">Found ${newOnes.length} new customer${newOnes.length!==1?'s':''}${skipped?` · ${skipped} already exist`:''}. Import?</div>
+      <div class="preview-list">${rows||'<div class="preview-row" style="color:#555">All customers already imported</div>'}</div>
+      <button class="btn-y" onclick="confirmImport()">${ic(D.check,18)} Import ${newOnes.length} Customers</button>
+      <button class="btn-d" onclick="S.csvPreview=null;render()">Cancel</button>`;
+  }
+
+  scr.innerHTML=`${hdr('IMPORT CUSTOMERS','list')}<div class="body">${body}</div>`;
+}
+
+function confirmImport(){
+  if(!S.csvPreview)return;
+  const existing=new Set(customers.map(c=>c.name.toLowerCase()));
+  S.csvPreview.newOnes.forEach(r=>{
+    if(!existing.has(r.name.toLowerCase())){
+      customers.push({id:Date.now()+Math.random(),name:r.name,address:r.address||''});
+    }
+  });
+  saveCust();
+  const n=S.csvPreview.newOnes.length;
+  S.csvPreview=null;
+  showStatus('ok',`✓ Imported ${n} customer${n!==1?'s':''}`);
+  go('list');
+}
+
+// ── ADD / EDIT ────────────────────────────────────────────────────
+function renderAddEdit(scr){
+  let suggHTML='';
+  if(S.addSugg.length){
+    suggHTML='<div class="sugg">';
+    S.addSugg.forEach(c=>{
+      suggHTML+=`<div class="srow" onclick="selectCustomerObj(${JSON.stringify(c).replace(/"/g,'&quot;')})"><span>🏭</span><span style="font-weight:600">${esc(c.name)}</span></div>`;
+    });
+    suggHTML+='</div>';
+  }
+  scr.innerHTML=`
+    ${hdr(S.editId?'EDIT CUSTOMER':'ADD CUSTOMER','list')}
+    <div class="body">
+      <div class="lbl">Name *</div>
+      <div class="sugg-wrap">
+        <input class="inp" id="name-inp" placeholder="Customer / company name" value="${esc(S.formName)}" autocomplete="off"/>
+        ${suggHTML}
+      </div>
+      <div class="lbl" style="margin-top:4px">Address (optional)</div>
+      <input class="inp" id="addr-inp" placeholder="e.g. 12 Warehouse Rd, Wagga Wagga NSW" value="${esc(S.formAddr)}"/>
+      <button class="btn-y" style="margin-top:4px" onclick="saveCustomer()">${ic(D.check,18)} ${S.editId?'Save Changes':'Add Customer'}</button>
+    </div>`;
+}
+
+function saveCustomer(){
+  const name=S.formName.trim();if(!name)return;
+  if(S.editId){
+    const idx=customers.findIndex(c=>c.id===S.editId);
+    if(idx>=0){customers[idx].name=name;customers[idx].address=S.formAddr.trim();}
+  } else {
+    if(customers.find(c=>c.name.toLowerCase()===name.toLowerCase())){showStatus('err','Customer already exists');return;}
+    customers.push({id:Date.now(),name,address:S.formAddr.trim()});
+  }
+  saveCust();S.formName='';S.formAddr='';S.editId=null;S.addSugg=[];
+  showStatus('ok',S.editId?'Saved':'Customer added');
+  go('list');
+}
+
+// ── PRINT ─────────────────────────────────────────────────────────
+function renderPrint(scr){
+  const busy=!!S.printingN||!!S.progress;
+  let qbtns='';
+  QUICK.forEach(n=>{
+    const active=S.printingN===n;
+    qbtns+=`<button class="qbtn${active?' active':''}" ${busy&&!active?'disabled':''} onclick="quickPrint(${n})">${active&&S.progress?S.progress.cur+'…':n}</button>`;
+  });
+
+  const numpadHTML=`
+    <div style="display:flex;gap:10px;align-items:center">
+      <input id="custom-qty" type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="999"
+        placeholder="0"
+        style="background:#0d0d0d;border:2px solid #FFD20066;border-radius:10px;color:#FFD200;font-size:36px;font-weight:700;text-align:center;padding:14px 10px;flex:1;outline:none;font-family:inherit;width:0"
+        value="${S.numVal||''}"
+        onchange="S.numVal=this.value"
+        oninput="S.numVal=this.value"/>
+      <button style="background:#FFD200;color:#000;border:none;border-radius:10px;padding:16px 20px;font-size:28px;font-weight:700;cursor:pointer;flex-shrink:0;line-height:1" onclick="customPrint()">✓</button>
+    </div>`;
+
+  scr.innerHTML=`
+    ${hdr('',null)}
+    <div class="body">
+      ${statusHTML()}
+      <div class="info-box" style="gap:8px;display:flex;align-items:center">
+        ${ic(D.layers,14,'#FFD200')}
+        Prints one label per case — "1 of 5", "2 of 5" etc.
+      </div>
+      <div class="lbl">Tap to print instantly</div>
+      <div class="qgrid">${qbtns}</div>
+      <div class="divider"><div class="divider-line"></div><span style="font-size:11px;color:#444;letter-spacing:1px">OTHER</span><div class="divider-line"></div></div>
+      ${numpadHTML}
+    </div>`;
+
+  // Inject customer name into header manually
+  const hdrEl=scr.querySelector('.hdr');
+  if(hdrEl){
+    const backBtn=document.createElement('button');
+    backBtn.className='btn-icon';
+    backBtn.innerHTML=ic(D.back,19,'#666');
+    backBtn.addEventListener('click',()=>go('list'));
+    const nameDiv=document.createElement('div');
+    nameDiv.style.flex='1';
+    nameDiv.innerHTML=`<div style="font-size:15px;font-weight:700;color:#FFD200;letter-spacing:.3px">${esc(S.selected?.name||'')}</div>${S.selected?.address?`<div style="font-size:11px;color:#666;margin-top:1px">${esc(S.selected.address)}</div>`:''}`;
+    const dotDiv=document.createElement('div');
+    dotDiv.className='dot';
+    dotDiv.style.cssText=`background:${S.dot};box-shadow:0 0 7px ${S.dot}`;
+    hdrEl.innerHTML='';
+    hdrEl.appendChild(backBtn);
+    hdrEl.appendChild(nameDiv);
+    hdrEl.appendChild(dotDiv);
+  }
+}
+
+function quickPrint(n){ S.printingN=n;render();printLabels(n); }
+function customPrint(){
+  const inp=document.getElementById('custom-qty');
+  const n=parseInt(inp?inp.value:S.numVal);
+  if(n>0){S.numVal='';S.printingN=n;render();printLabels(n);}
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────
+function applyPreset(key,w,h){
+  settings.labelPreset=key;
+  if(w!==null){settings.labelW=w;settings.labelH=h;}
+  saveSet();render();
+}
+function renderSettings(scr){
+  let printerHTML='';
+  if(!S.printers.length){
+    printerHTML=`<div style="color:#555;font-size:13px;line-height:1.8">No printers found.<br>Run <b style="color:#888">Zebra BrowserPrint</b> on this device.<br><span style="color:#FFD200">zebra.com/browserprint</span></div>`;
+  } else {
+    S.printers.forEach(p=>{
+      const sel=settings.printerUid===p.uid;
+      printerHTML+=`<div class="card" style="cursor:pointer;margin-bottom:8px;border:${sel?'2px solid #FFD200':'1px solid #222'}" onclick="settings.printerUid='${p.uid}';saveSet();render()">
+        ${ic(D.prnt,20,sel?'#FFD200':'#555')}
+        <div style="flex:1"><div style="font-size:14px;font-weight:600">${esc(p.name||p.uid)}</div><div style="font-size:11px;color:#555">${esc(p.uid)}</div></div>
+        ${sel?ic(D.check,17,'#FFD200'):''}
+      </div>`;
+    });
+  }
+
+  const fn=settings.fontName, fc=settings.fontCases, fm=settings.fontMeta;
+  const pName=Math.round(fn*0.22), pCases=Math.round(fc*0.22), pMeta=Math.round(fm*0.22);
+
+  scr.innerHTML=`
+    ${hdr('SETTINGS','list')}
+    <div class="body">
+
+      <div class="section">
+        <div class="row">
+          <div class="sec-title" style="margin-bottom:0">ZEBRA PRINTER</div>
+          <button class="btn-sm" onclick="refreshPrinters()">${ic(D.ref,13)} Refresh</button>
+        </div>
+        <div style="margin-top:12px">${printerHTML}</div>
+      </div>
+
+      <div class="section">
+        <div class="sec-title">BROWSERPRINT HOST</div>
+        <div style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.6">
+          On PC press Win+R → <b style="color:#888">cmd</b> → type <b style="color:#888">ipconfig</b><br>
+          Enter the <b style="color:#888">IPv4 Address</b> below (e.g. 192.168.1.45)<br>
+          Use <b style="color:#888">localhost</b> if opening on the PC itself.
+        </div>
+        <input class="inp" id="bp-host-inp" value="${settings.bpHost||'localhost'}"
+          placeholder="e.g. 192.168.1.45"
+          style="margin-bottom:10px"
+          oninput="settings.bpHost=this.value.trim();saveSet()"/>
+        <button class="btn-sm" style="width:100%;justify-content:center" onclick="refreshPrinters()">
+          ${ic(D.ref,13)} Test Connection &amp; Find Printer
+        </button>
+      </div>
+      <div class="section">
+        <div class="sec-title">LABEL SIZE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          ${[
+            {key:'100x70',  label:'100 × 70mm', w:799, h:559},
+            {key:'101x51',  label:'101 × 51mm', w:812, h:406},
+            {key:'57x32',   label:'57 × 32mm',  w:456, h:256},
+            {key:'50x25',   label:'50 × 25mm',  w:399, h:199},
+            {key:'custom',  label:'Custom',      w:null,h:null},
+          ].map(p=>`<button onclick="applyPreset('${p.key}',${p.w},${p.h})"
+            style="background:${settings.labelPreset===p.key?'#FFD200':'#1a1a1a'};color:${settings.labelPreset===p.key?'#000':'#f0f0f0'};border:1px solid ${settings.labelPreset===p.key?'#FFD200':'#222'};border-radius:9px;padding:11px 8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+            ${p.label}</button>`).join('')}
+        </div>
+        ${settings.labelPreset==='custom'?`
+        <div class="grid2">
+          <div><div class="lbl">Width (dots)</div><input class="inp" type="number" id="rng-labelW" value="${settings.labelW}" oninput="settings.labelW=+this.value;saveSet()"/></div>
+          <div><div class="lbl">Height (dots)</div><input class="inp" type="number" id="rng-labelH" value="${settings.labelH}" oninput="settings.labelH=+this.value;saveSet()"/></div>
+        </div>
+        <div style="font-size:11px;color:#444;margin-top:8px">203dpi ≈ 8 dots/mm</div>`:''}
+      </div>
+      <div class="section">
+        <div class="sec-title">LABEL OPTIONS</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
+          <div>
+            <div style="font-size:15px;font-weight:600">Print address on label</div>
+            <div style="font-size:12px;color:#555;margin-top:2px">Shows delivery address under name</div>
+          </div>
+          <div onclick="settings.showAddress=!settings.showAddress;saveSet();render()"
+            style="width:50px;height:28px;border-radius:99px;background:${settings.showAddress?'#FFD200':'#333'};cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+            <div style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:3px;left:${settings.showAddress?'25px':'3px'};transition:left .2s"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-title">${ic(D.font,15,'#FFD200')} FONT SIZES</div>
+
+        <div class="lbl">Customer Name</div>
+        <div class="rng-row"><span style="color:#888;font-size:13px">Size</span><span style="color:#FFD200;font-weight:700" id="val-fontName">${fn}</span></div>
+        <input type="range" min="28" max="80" step="2" value="${fn}" id="rng-fontName"/>
+        <div class="rng-ends"><span>Smaller</span><span>Larger</span></div>
+
+        <div class="lbl" style="margin-top:14px">Box Count (X of Y)</div>
+        <div class="rng-row"><span style="color:#888;font-size:13px">Size</span><span style="color:#FFD200;font-weight:700" id="val-fontCases">${fc}</span></div>
+        <input type="range" min="28" max="80" step="2" value="${fc}" id="rng-fontCases"/>
+        <div class="rng-ends"><span>Smaller</span><span>Larger</span></div>
+
+        <div class="lbl" style="margin-top:14px">Date / Labels / Address</div>
+        <div class="rng-row"><span style="color:#888;font-size:13px">Size</span><span style="color:#FFD200;font-weight:700" id="val-fontMeta">${fm}</span></div>
+        <input type="range" min="14" max="44" step="2" value="${fm}" id="rng-fontMeta"/>
+        <div class="rng-ends"><span>Smaller</span><span>Larger</span></div>
+
+        <div class="preview-box" id="preview-box">
+          <div style="font-size:10px;color:#444;margin-bottom:8px;letter-spacing:1px">PREVIEW</div>
+          <div id="pv-name" style="font-size:${pName}px;font-weight:700;color:#f0f0f0;line-height:1.2">Customer Name</div>
+          <div style="height:1px;background:#222;margin:6px 0"></div>
+          <div id="pv-num" style="font-size:${pCases}px;font-weight:700;color:#FFD200;text-align:center">2 of 5</div>
+          <div id="pv-date" style="font-size:${pMeta}px;color:#555;margin-top:4px">19 Mar 2026</div>
+        </div>
+      </div>
+
+    </div>`;
+
+  // Attach slider listeners after render
+  ['fontName','fontCases','fontMeta'].forEach(k=>{
+    const el=document.getElementById('rng-'+k);
+    if(!el)return;
+    el.addEventListener('input',e=>{
+      settings[k]=+e.target.value; saveSet();
+      const vEl=document.getElementById('val-'+k); if(vEl)vEl.textContent=settings[k];
+      updatePreview();
+    });
+  });
+}
+
+function updatePreview(){
+  const fn=settings.fontName,fc=settings.fontCases,fm=settings.fontMeta;
+  const set=(id,prop,val)=>{ const e=document.getElementById(id); if(e)e.style[prop]=val+'px'; };
+  set('pv-name','fontSize',Math.round(fn*0.22));
+  set('pv-num','fontSize',Math.round(fc*0.22));
+  set('pv-date','fontSize',Math.round(fm*0.22));
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────
+checkDot();
+render();
+</script>
+</body>
+</html>
